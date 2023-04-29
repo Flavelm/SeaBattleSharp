@@ -1,0 +1,7 @@
+{
+    "ListenIp":"0.0.0.0",
+    "ListenPort":5400,
+    "BackLog":50,
+    "Timeout":1000,
+    "Debug": true
+}

@@ -1,0 +1,11 @@
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/obj/Debug/net6.0/SeaBattleClient.csproj.AssemblyReference.cache
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/obj/Debug/net6.0/SeaBattleClient.GeneratedMSBuildEditorConfig.editorconfig
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/obj/Debug/net6.0/SeaBattleClient.AssemblyInfoInputs.cache
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/obj/Debug/net6.0/SeaBattleClient.AssemblyInfo.cs
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/obj/Debug/net6.0/SeaBattleClient.csproj.CoreCompileInputs.cache
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/bin/Debug/net6.0/SeaBattleClient
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/bin/Debug/net6.0/SeaBattleClient.dll
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/bin/Debug/net6.0/SeaBattleClient.pdb
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/obj/Debug/net6.0/SeaBattleClient.dll
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/obj/Debug/net6.0/refint/SeaBattleClient.dll
+/media/kot_200_80/DataLibrary2/Development/Sources/C#/SeaBattle/SeaBattleClient/obj/Debug/net6.0/SeaBattleClient.pdb

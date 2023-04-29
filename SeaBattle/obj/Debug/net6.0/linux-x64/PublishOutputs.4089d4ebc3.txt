@@ -1,0 +1,2 @@
+/home/kot_200_80/Sources/C#/SeaBattle/SeaBattle/bin/Debug/net6.0/linux-x64/publish/SeaBattle.pdb
+/home/kot_200_80/Sources/C#/SeaBattle/SeaBattle/bin/Debug/net6.0/linux-x64/publish/SeaBattle
