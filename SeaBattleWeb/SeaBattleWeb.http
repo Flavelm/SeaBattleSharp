@@ -1,0 +1,29 @@
+@SeaBattleWeb_HostAddress = http://localhost:5230
+@Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6ImtvdF8yMDBfODAiLCJzdWIiOiJrb3RfMjAwXzgwIiwianRpIjoiOTljOGJmZGEiLCJzY29wZSI6InRvZG9zX2FwaSIsInJvbGUiOiJ1c2VyIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6NDkwNjciLCJodHRwczovL2xvY2FsaG9zdDo0NDMyMSIsImh0dHA6Ly9sb2NhbGhvc3Q6NTIzMCIsImh0dHBzOi8vbG9jYWxob3N0OjcyMzUiXSwibmJmIjoxNzA4ODA0MTc1LCJleHAiOjE3MTY1ODAxNzUsImlhdCI6MTcwODgwNDE3NiwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.CJ3D7U6Ra5FNZvC6OrG9QIhgQ9h-3ubsIgdZTjfG-4I
+
+GET {{SeaBattleWeb_HostAddress}}/todos
+Accept: application/json
+Authorization: Bearer {{Token}}
+
+###
+
+POST {{SeaBattleWeb_HostAddress}}/todos
+Content-Type: application/json
+Authorization: Bearer {{Token}}
+
+{
+  "id": 0,
+  "name": "Demo task",
+  "dueDate": "2024-03-01",
+  "isCompleted": false
+}
+
+###
+
+GET {{SeaBattleWeb_HostAddress}}/tasks/0
+Accept: application/json
+
+###
+
+DELETE {{SeaBattleWeb_HostAddress}}/todos
+Accept: application/json
