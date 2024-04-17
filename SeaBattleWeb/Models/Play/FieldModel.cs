@@ -1,45 +1,27 @@
-using System.Net.WebSockets;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using NuGet.Protocol;
-
 namespace SeaBattleWeb.Models.Play;
 
 public class FieldModel
 {
     private IProfileModel _ownedProfile;
     private readonly IDictionary<Position, Ship> _ships;
+    private readonly List<Position> _openedPositions = new();
 
-    public IProfileModel OwnedProfile
+    public FieldModel(IProfileModel ownedProfile, IDictionary<Position, Ship> ships)
     {
-        get => _ownedProfile;
-        init => _ownedProfile = value is { Connection: not null }
-            ? value 
-            : throw new ArgumentException("Only connected clients");
+        _ownedProfile = ownedProfile;
+        _ships = ships;
     }
-    public IDictionary<Position, Ship> Ships
+
+    public IProfileModel OwnedProfile => _ownedProfile;
+    public IDictionary<Position, Ship> Ships => _ships;
+    public IDictionary<Position, Ship> OpenedPositions
     {
         get => _ships;
         init => _ships = value.AsReadOnly();
     }
 
-    public void RefreshField() => RefreshField(this);
-
-    public void RefreshField(FieldModel model)
+    public bool GetField(IProfileModel profileModel)
     {
-        string message;
-        if (this == model)
-            message = JsonConvert.SerializeObject(
-                new { YourFieldUpdate = Ships });
-        else
-            message = JsonConvert.SerializeObject(
-                new { OppenentFieldUpdate = model.Ships.Where(pair => pair.Value.IsBroken) });
-        ArraySegment<byte> buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
-        OwnedProfile.Connection!.SendAsync(
-            buffer,
-            WebSocketMessageType.Text,
-            WebSocketMessageFlags.EndOfMessage,
-            CancellationToken.None);
+        return _ownedProfile.Equals(profileModel);
     }
 }

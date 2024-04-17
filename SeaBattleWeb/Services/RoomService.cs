@@ -1,13 +1,14 @@
 using System.Net.WebSockets;
 using System.Text;
 using SeaBattleWeb.Models;
+using SeaBattleWeb.Services.Play;
 
 namespace SeaBattleWeb.Services;
 
-public class RoomService(ILogger<RoomService> logger) : IRoomService
+public class RoomService(ILogger<RoomService> logger, PlayFieldService playFieldService) : IRoomService
 {
     private readonly IDictionary<IProfileModel, WebSocket> _viewers = new Dictionary<IProfileModel, WebSocket>();
-    public DateTime LastActivity { get; private set; } = DateTime.Now;
+    public DateTime LastActivity { get; private set; } = playFieldService.LastActivity;
 
     public async Task ProcessSocket(IProfileModel profileModel, WebSocket webSocket)
     {

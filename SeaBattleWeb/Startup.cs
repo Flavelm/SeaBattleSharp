@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SeaBattleWeb.Context;
+using SeaBattleWeb.Models.Play;
 using SeaBattleWeb.Services;
+using SeaBattleWeb.Services.Play;
 
 namespace SeaBattleWeb;
 
@@ -52,6 +54,8 @@ public class Startup(IConfiguration configuration)
         
         services.AddSingleton<IRoomsService, RoomsService>();
         services.AddScoped<IRoomService, RoomService>();
+        services.AddScoped<PlayFieldService>();
+        services.AddTransient<FieldService>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis;
 using SeaBattleWeb.Context;
 using SeaBattleWeb.Models;
 using SeaBattleWeb.Models.User;
@@ -19,24 +20,25 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
     }
     
     [HttpGet("{id}/TestConnection")]
-    public async Task<IActionResult> TestConnection(Guid id)
+    public async Task<IActionResult> TestConnection(Guid id, Optional<string> name)
     {
         UserModel? userModel = usersContext.GetCurrentUser(User.Identity);
         IProfileModel? profileModel = 
             userModel is null 
-                ? IProfileModel.Null 
+                ? new NullProfileModel(name.Value) 
                 : await profiles.Profiles.FindAsync(userModel.IdUsername);
+        
         if (profileModel == null)
             return BadRequest(new { Error = "Profile not found!" });
         
         if (!roomsService.Has(id))
             return BadRequest(new { Error = "Room not found!" });
         
-        return null!;
+        return Ok(new { Message = $"Welcome, {profileModel.IdUsername}" });
     }
     
     [HttpGet("{id}/Connection")]
-    public async Task OpenConnection(Guid id)
+    public async Task OpenConnection(Guid id, Optional<string> name)
     {
         var webSockets = HttpContext.WebSockets;
         if (!webSockets.IsWebSocketRequest)
@@ -46,7 +48,7 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
         UserModel? userModel = usersContext.GetCurrentUser(User.Identity);
         IProfileModel? profileModel = 
             userModel is null 
-            ? IProfileModel.Null 
+            ? new NullProfileModel(name.Value)
             : await profiles.Profiles.FindAsync(userModel.IdUsername);
         
         WebSocket socket = await webSockets.AcceptWebSocketAsync();

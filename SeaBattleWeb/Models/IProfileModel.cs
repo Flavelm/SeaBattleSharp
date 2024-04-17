@@ -8,10 +8,6 @@ public interface IProfileModel
     public string IdUsername { get; }
     public Guid Id { get; }
     
-    public WebSocket? Connection { get; set; }
-
     public void Update();
     public bool Equals(object? obj);
-    
-    public static NullProfileModel Null => new();
 }

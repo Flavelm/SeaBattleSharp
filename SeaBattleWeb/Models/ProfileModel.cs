@@ -12,8 +12,6 @@ public class ProfileModel(ProfileContext profileContext) : IProfileModel
     [Required] [Key] public string IdUsername { get; set; }
     [Required] public Guid Id { get; set; } = Guid.NewGuid();
     
-    public WebSocket? Connection { get; set; }
-
     public void Update()
     {
         profileContext.Profiles.Update(this);
