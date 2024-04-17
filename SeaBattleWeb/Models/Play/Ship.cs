@@ -1,13 +1,6 @@
-namespace SeaBattleWeb.Models;
+namespace SeaBattleWeb.Models.Play;
 
-public class Ship(IProfileModel ownedBy, Position position)
+public class Ship
 {
-    public ProfileModel OwnedProfile { get; }
-    public bool IsWrecked { get; private set; }
-    public Position Position { get; }
-
-    public bool IsOwnedBy(ProfileModel other)
-    {
-        return OwnedProfile == other;
-    }
+    public bool IsBroken { get; set; }
 }

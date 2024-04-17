@@ -1,4 +1,4 @@
-namespace SeaBattleWeb.Models;
+namespace SeaBattleWeb.Models.Play;
 
 public readonly struct Position(int x, int y)
 {
