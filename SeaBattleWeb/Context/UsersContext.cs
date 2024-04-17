@@ -42,7 +42,7 @@ public class UsersContext(DbContextOptions<UsersContext> options, IConfiguration
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
     
-    public UserModel GetCurrentUser(IIdentity? identity)
+    public UserModel? GetCurrentUser(IIdentity? identity)
     {
         if (identity as ClaimsIdentity is { IsAuthenticated: true, Claims: not null } claimsIdentity)
         {

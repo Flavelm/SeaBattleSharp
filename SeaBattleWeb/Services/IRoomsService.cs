@@ -5,10 +5,11 @@ namespace SeaBattleWeb.Services;
 
 public interface IRoomsService
 {
-    IRoomService this[int index]
+    IRoomService this[Guid index]
     {
         get;
     }
 
-    int Create();
+    Guid Create();
+    bool Has(Guid id);
 }

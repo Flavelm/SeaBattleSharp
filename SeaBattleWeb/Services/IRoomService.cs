@@ -5,5 +5,6 @@ namespace SeaBattleWeb.Services;
 
 public interface IRoomService
 {
-    Task HandleViewer(ProfileModel profile, WebSocket socket);
+    DateTime LastActivity { get; }
+    Task ProcessSocket(IProfileModel profile, WebSocket socket);
 }

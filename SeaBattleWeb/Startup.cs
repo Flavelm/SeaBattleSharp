@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SeaBattleWeb.Context;
@@ -42,6 +43,12 @@ public class Startup(IConfiguration configuration)
 
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
+
+        services.AddWebSockets(opt =>
+        {
+            opt.KeepAliveInterval = TimeSpan.FromMinutes(2);
+            opt.AllowedOrigins.Add(Configuration["AllowedHosts"]);
+        });
         
         services.AddSingleton<IRoomsService, RoomsService>();
         services.AddScoped<IRoomService, RoomService>();
@@ -63,19 +70,20 @@ public class Startup(IConfiguration configuration)
             app.UseHsts();
         }
 
-        app.UseHttpsRedirection();
+        app.UseWebSockets(new WebSocketOptions
+        {
+            KeepAliveInterval = TimeSpan.FromMinutes(2),
+            AllowedOrigins = { Configuration["AllowedHosts"] }
+        });
+        
+        //app.UseHttpsRedirection();
         //app.UseStaticFiles();
 
-        app.UseCors();
+        app.UseCors(opt => opt.AllowAnyOrigin());
         app.UseRouting();
 
         app.UseAuthentication();
         app.UseAuthorization();
-
-        app.UseWebSockets(new WebSocketOptions
-        {
-            KeepAliveInterval = TimeSpan.FromMinutes(2)
-        });
 
         app.UseEndpoints(endpoints =>
         {

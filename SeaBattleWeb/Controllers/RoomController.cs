@@ -10,26 +10,48 @@ namespace SeaBattleWeb.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "user")]
-public class RoomController(UsersContext usersContext, ProfileContext profiles, IRoomsService roomsService) : ControllerBase
+public class RoomController(UsersContext usersContext, ProfileContext profiles, IRoomsService roomsService, ILogger<RoomController> logger) : ControllerBase
 {
+    [HttpGet("Create")]
+    public async Task<IActionResult> CreateRoom()
+    { //Todo Prevent memory leak
+        return Ok(new {Create = roomsService.Create()});
+    }
+    
+    [HttpGet("{id}/TestConnection")]
+    public async Task<IActionResult> TestConnection(Guid id)
+    {
+        UserModel? userModel = usersContext.GetCurrentUser(User.Identity);
+        IProfileModel? profileModel = 
+            userModel is null 
+                ? IProfileModel.Null 
+                : await profiles.Profiles.FindAsync(userModel.IdUsername);
+        if (profileModel == null)
+            return BadRequest(new { Error = "Profile not found!" });
+        
+        if (!roomsService.Has(id))
+            return BadRequest(new { Error = "Room not found!" });
+        
+        return null!;
+    }
+    
     [HttpGet("{id}/Connection")]
-    public async Task<IActionResult> OpenConnection(int id)
+    public async Task OpenConnection(Guid id)
     {
         var webSockets = HttpContext.WebSockets;
         if (!webSockets.IsWebSocketRequest)
-            return BadRequest();
+            return;
+        logger.LogInformation("Opening websocket");
+        
+        UserModel? userModel = usersContext.GetCurrentUser(User.Identity);
+        IProfileModel? profileModel = 
+            userModel is null 
+            ? IProfileModel.Null 
+            : await profiles.Profiles.FindAsync(userModel.IdUsername);
         
         WebSocket socket = await webSockets.AcceptWebSocketAsync();
-
-        UserModel userModel = usersContext.GetCurrentUser(User.Identity);
-        ProfileModel? profileModel = profiles.Profiles.Find(userModel.IdUsername);
-
-        if (profileModel == null)
-            return NotFound(new { Error = "Not found your profile" });
+        logger.LogInformation("Accepted websocket");
         
-        roomsService[id].HandleViewer(profileModel, socket);
-        
-        return Ok();
+        await roomsService[id].ProcessSocket(profileModel, socket);
     }
 }

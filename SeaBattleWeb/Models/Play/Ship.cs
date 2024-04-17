@@ -4,5 +4,5 @@ public class Ship
 {
     public ProfileModel OwnedProfile;
     public ShipState State { get; private set; }
-    public Position Pos { get; }
+    public Position Position { get; }
 }

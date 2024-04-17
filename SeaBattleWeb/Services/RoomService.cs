@@ -1,43 +1,21 @@
 using System.Net.WebSockets;
+using System.Text;
 using SeaBattleWeb.Models;
 
 namespace SeaBattleWeb.Services;
 
-public class RoomService(ILogger<RoomService> logger) : IRoomService, IHostedService
+public class RoomService(ILogger<RoomService> logger) : IRoomService
 {
-    private readonly IDictionary<ProfileModel, WebSocket> _viewers = new Dictionary<ProfileModel, WebSocket>();
-    private Thread? _reader;
-    private CancellationTokenSource _cancellationTokenSource = new();
-    
-    private void ReadWebSockets()
+    private readonly IDictionary<IProfileModel, WebSocket> _viewers = new Dictionary<IProfileModel, WebSocket>();
+    public DateTime LastActivity { get; private set; } = DateTime.Now;
+
+    public async Task ProcessSocket(IProfileModel profileModel, WebSocket webSocket)
     {
-        while (!_cancellationTokenSource.IsCancellationRequested)
-        {
-            List<Task> tasks = new List<Task>();
-            
-            lock (_viewers)
-            {
-                foreach (var keyPair in _viewers)
-                {
-                    WebSocket webSocket = keyPair.Value;
-                    if (webSocket.State == WebSocketState.Closed)
-                        continue;
+        lock (_viewers)
+            _viewers.Add(profileModel, webSocket);
+        logger.LogInformation("Connection process!");
 
-                    tasks.Add(ProcessSocket(keyPair.Key, webSocket));
-                }
-            }
-
-            foreach (var task in tasks)
-                task.Wait();
-        }
-
-        foreach (var viewer in _viewers.Values)
-            viewer.CloseAsync(WebSocketCloseStatus.Empty, "Reader shutdown", new CancellationToken());
-    }
-
-    private async Task ProcessSocket(ProfileModel profileModel, WebSocket webSocket)
-    {
-        var buffer = new byte[1024];
+        var buffer = new byte[1024 * 4];
         var receiveResult = await webSocket.ReceiveAsync(
             new ArraySegment<byte>(buffer), CancellationToken.None);
 
@@ -48,51 +26,15 @@ public class RoomService(ILogger<RoomService> logger) : IRoomService, IHostedSer
                 receiveResult.MessageType,
                 receiveResult.EndOfMessage,
                 CancellationToken.None);
-
             receiveResult = await webSocket.ReceiveAsync(
                 new ArraySegment<byte>(buffer), CancellationToken.None);
+            
+            LastActivity = DateTime.Now;
         }
 
         await webSocket.CloseAsync(
             receiveResult.CloseStatus.Value,
             receiveResult.CloseStatusDescription,
             CancellationToken.None);
-    }
-    
-    public async Task HandleViewer(ProfileModel profile, WebSocket socket)
-    {
-        logger.LogInformation("Connected viewer");
-        lock (_viewers)
-        {
-            if (_viewers.Keys.FirstOrDefault(pm => pm.Id == profile.Id, null) != null)
-                _viewers.Add(profile, socket);
-            else
-                socket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable,
-                    "You already connected",
-                    new CancellationToken());
-        }
-        
-    }
-
-
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Starting websocket reader");
-        _reader = new Thread(ReadWebSockets);
-        _reader.Name = "Socket reader";
-        _reader.Start();
-        logger.LogInformation("Started websocket reader");
-        return Task.CompletedTask;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Stopping websocket reader");
-        _cancellationTokenSource.Cancel();
-        if (_reader == null)
-            return Task.CompletedTask;
-        _reader.Join();
-        logger.LogInformation("Stopped websocket reader");
-        return Task.CompletedTask;
     }
 }
