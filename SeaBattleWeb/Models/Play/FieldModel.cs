@@ -1,3 +1,5 @@
+using NuGet.Packaging;
+
 namespace SeaBattleWeb.Models.Play;
 
 public class FieldModel
@@ -9,19 +11,31 @@ public class FieldModel
     public FieldModel(IProfileModel ownedProfile, IDictionary<Position, Ship> ships)
     {
         _ownedProfile = ownedProfile;
-        _ships = ships;
+        _ships = ships.AsReadOnly();
     }
 
     public IProfileModel OwnedProfile => _ownedProfile;
     public IDictionary<Position, Ship> Ships => _ships;
-    public IDictionary<Position, Ship> OpenedPositions
-    {
-        get => _ships;
-        init => _ships = value.AsReadOnly();
-    }
+    public List<Position> OpenedPositions => _openedPositions;
 
-    public bool GetField(IProfileModel profileModel)
+    //Position, IsShip
+    public IDictionary<Position, bool> GetField(IProfileModel profileModel)
     {
-        return _ownedProfile.Equals(profileModel);
+        var toReturn = new Dictionary<Position, bool>();
+        if (_ownedProfile.Equals(profileModel))
+        {
+            toReturn.AddRange(
+                _ships.Select(pair => new KeyValuePair<Position, bool>(pair.Key, true))
+            );
+        }
+        else
+        {
+            toReturn.AddRange(
+                _ships.Select(pair => new KeyValuePair<Position, bool>(pair.Key, pair.Value.IsBroken))
+            );
+        }
+        
+        toReturn.AddRange(_openedPositions.Select(pos => new KeyValuePair<Position, bool>(pos, false)));
+        return toReturn;
     }
 }

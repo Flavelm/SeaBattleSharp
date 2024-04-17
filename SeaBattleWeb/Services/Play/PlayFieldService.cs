@@ -1,8 +1,5 @@
 using System.Net.WebSockets;
-using System.Text;
-using Newtonsoft.Json;
 using SeaBattleWeb.Models;
-using SeaBattleWeb.Models.Play;
 
 namespace SeaBattleWeb.Services.Play;
 
@@ -18,7 +15,6 @@ public class PlayFieldService(IServiceProvider provider)
     {
         FieldService service = provider.GetRequiredService<FieldService>();
         service.FieldUpdated += SyncOnFieldUpdated;
-        service.SetupPlayer(socket, profileModel);
         lock (_fields)
         {
             if (_fields.Count >= 1)
@@ -26,17 +22,35 @@ public class PlayFieldService(IServiceProvider provider)
                     fieldService.Socket.QuickSend(new { OpponentJoined = true });
             _fields.Add(service);
         }
+
+        LastActivity = DateTime.Now;
+        await service.SetupPlayer(socket, profileModel);
     }
 
     private void SyncOnFieldUpdated(object? sender, FieldServiceEventArgs e)
     {
         if (e.Type == FieldServiceEventType.FieldConfigured)
+        {
             lock (_fields)
+            {
                 foreach (var fieldService in _fields.Where(o => o != e.Instance))
                     fieldService.Socket.QuickSend(new { OpponentJoined = true });
-        lock (_fields)
-            if (IsReady)
-                foreach (var field in _fields)
-                    field.Socket.QuickSend(new { Ready = true });
+                if (IsReady)
+                    foreach (var field in _fields)
+                        field.Socket.QuickSend(new { Ready = true });
+            }
+        }
+        else if (e.Type is FieldServiceEventType.ShipBroken)
+        {
+            lock (_fields)
+            {
+                for (int i = 0; i < _fields.Count; i++)
+                {
+                    _fields[i.Reverse()].Sync(_fields[i].Field.OwnedProfile);
+                    _fields[i].Sync();
+                }
+            }
+        }
+        LastActivity = DateTime.Now;
     }
 }

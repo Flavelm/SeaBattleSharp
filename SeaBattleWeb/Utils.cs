@@ -20,4 +20,6 @@ public static class Utils
             WebSocketMessageFlags.EndOfMessage,
             CancellationToken.None);
     }
+
+    public static int Reverse(this int num) => num == 0 ? 1 : 0;
 }

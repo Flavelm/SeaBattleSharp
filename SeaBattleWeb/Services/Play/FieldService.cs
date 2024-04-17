@@ -15,8 +15,19 @@ public class FieldService(PlayFieldService playFieldService)
     
     public bool IsReady => _field != null;
     public WebSocket Socket => _socket;
+    public FieldModel Field => _field;
     
     public event EventHandler<FieldServiceEventArgs> FieldUpdated;
+
+    public async Task Sync(IProfileModel profileModel)
+    {
+        Socket.QuickSend(new { OpponentField = Field.GetField(profileModel) });
+    }
+    
+    public async Task Sync()
+    {
+        Socket.QuickSend(new { YourField = Field.GetField(Field.OwnedProfile) });
+    }
 
     public async Task SetupPlayer(WebSocket socket, IProfileModel profileModel)
     {
@@ -44,12 +55,14 @@ public class FieldService(PlayFieldService playFieldService)
             Instance = this,
             Type = FieldServiceEventType.FieldConfigured
         });
-        
-        Read();
+
+        await Read(socket, profileModel);
     }
 
-    private async Task Read()
+    private async Task Read(WebSocket socket, IProfileModel profileModel)
     {
+        await SetupPlayer(socket, profileModel);
+        
         if (_socket == null)
             throw new ArgumentException("Socket didn't open!");
         
