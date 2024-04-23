@@ -13,13 +13,13 @@ namespace SeaBattleWeb.Controllers;
 [ApiController]
 public class RoomController(UsersContext usersContext, ProfileContext profiles, IRoomsService roomsService, ILogger<RoomController> logger) : ControllerBase
 {
-    [HttpGet("Create")]
+    [HttpPost("Create")]
     public async Task<IActionResult> CreateRoom()
     { //Todo Prevent memory leak
         return Ok(new {Create = roomsService.Create()});
     }
     
-    [HttpGet("{id}/TestConnection")]
+    [HttpPost("{id}/TestConnection")]
     public async Task<IActionResult> TestConnection(Guid id, Optional<string> name)
     {
         UserModel? userModel = usersContext.GetCurrentUser(User.Identity);
@@ -34,7 +34,7 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
         if (!roomsService.Has(id))
             return BadRequest(new { Error = "Room not found!" });
         
-        return Ok(new { Message = $"Welcome, {profileModel.IdUsername}" });
+        return Ok(new { Message = $"Welcome {(profileModel is NullProfileModel ? "anonymous" : "known")}, {profileModel.IdUsername}" });
     }
     
     [HttpGet("{id}/Connection")]
