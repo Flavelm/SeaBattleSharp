@@ -20,12 +20,12 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
     }
     
     [HttpPost("{id}/TestConnection")]
-    public async Task<IActionResult> TestConnection(Guid id, Optional<string> name)
+    public async Task<IActionResult> TestConnection(Guid id, string? name)
     {
         UserModel? userModel = usersContext.GetCurrentUser(User.Identity);
         IProfileModel? profileModel = 
             userModel is null 
-                ? new NullProfileModel(name.Value) 
+                ? new NullProfileModel(name) 
                 : await profiles.Profiles.FindAsync(userModel.IdUsername);
         
         if (profileModel == null)
@@ -38,7 +38,7 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
     }
     
     [HttpGet("{id}/Connection")]
-    public async Task OpenConnection(Guid id, Optional<string> name)
+    public async Task OpenConnection(Guid id, string? name)
     {
         var webSockets = HttpContext.WebSockets;
         if (!webSockets.IsWebSocketRequest)
@@ -48,7 +48,7 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
         UserModel? userModel = usersContext.GetCurrentUser(User.Identity);
         IProfileModel? profileModel = 
             userModel is null 
-            ? new NullProfileModel(name.Value)
+            ? new NullProfileModel(name)
             : await profiles.Profiles.FindAsync(userModel.IdUsername);
         
         WebSocket socket = await webSockets.AcceptWebSocketAsync();
