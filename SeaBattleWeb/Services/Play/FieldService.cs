@@ -35,21 +35,21 @@ public class FieldService(PlayFieldService playFieldService)
         var receiveResult = await socket.ReceiveAsync(
             new ArraySegment<byte>(buffer), CancellationToken.None);
 
-        IDictionary<Position, Ship>? ships = null;
+        KeyValuePair<string, List<Ship>>? ships;
         try
         {
             string json = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
-            ships = JsonConvert.DeserializeObject<Dictionary<Position, Ship>>(json);
+            ships = JsonConvert.DeserializeObject<KeyValuePair<string, List<Ship>>>(json);
         }
         finally { }
         
-        if (ships == null)
+        if (!ships.HasValue || ships.Value.Key != "YourField")
         {
             socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, null, CancellationToken.None);
             return;
         }
         
-        _field = new FieldModel(profileModel, ships); //Todo validate
+        _field = new FieldModel(profileModel, ships.Value.Value); //Todo validate
         FieldUpdated.Invoke(this, new FieldServiceEventArgs()
         {
             Instance = this,

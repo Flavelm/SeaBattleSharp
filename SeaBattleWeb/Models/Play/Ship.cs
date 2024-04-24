@@ -1,6 +1,6 @@
 namespace SeaBattleWeb.Models.Play;
 
-public class Ship
+public class Ship(int x, int y) : Position(x, y)
 {
     public event EventHandler Updated; 
     public bool IsBroken { get; set; }

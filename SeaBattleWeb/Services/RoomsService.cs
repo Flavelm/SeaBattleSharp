@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.SignalR;
 using NuGet.Frameworks;
 
@@ -31,6 +32,23 @@ public class RoomsService(IServiceProvider provider) : IRoomsService
         lock (_blocker)
         {
             return _scopes.ContainsKey(id);
+        }
+    }
+
+    public bool Has(Guid id, out IRoomService roomService)
+    {
+        lock (_blocker)
+        {
+            if (_scopes.TryGetValue(id, out var scope))
+            {
+                roomService = scope.ServiceProvider.GetRequiredService<IRoomService>();
+                return true;
+            }
+            else
+            {
+                roomService = null;
+                return false;
+            }
         }
     }
 
