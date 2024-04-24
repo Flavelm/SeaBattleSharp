@@ -8,8 +8,20 @@ public class PlayFieldService(IServiceProvider provider)
     private readonly List<FieldService> _fields = new();
     
     public DateTime LastActivity { get; private set; }
-    public bool IsReady => _fields.All(field => field.IsReady);
-    
+
+    public bool IsReady
+    {
+        get
+        {
+            lock (_fields)
+            {
+                if (_fields.Count == 0)
+                    return false;
+                return _fields.All(field => field.IsReady);
+            }
+        }
+    }
+
     public Task ProcessSocket(IProfileModel profile, WebSocket socket)
     {
         return SetupField(socket, profile);

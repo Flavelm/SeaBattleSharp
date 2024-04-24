@@ -35,7 +35,7 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
             return BadRequest(new { Error = "Room not found!" });
         else
             if (room.IsReady || !room.CanConnect)
-                return BadRequest(new { Error = "Room ready" });
+                return BadRequest(new { Error = $"Room ready" });
         
         return Ok(new { Message = $"Welcome {(profileModel is NullProfileModel ? "anonymous" : "known")}, {profileModel.IdUsername}" });
     }

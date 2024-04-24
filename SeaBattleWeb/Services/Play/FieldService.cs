@@ -6,7 +6,7 @@ using SeaBattleWeb.Models.Play;
 
 namespace SeaBattleWeb.Services.Play;
 
-public class FieldService(PlayFieldService playFieldService)
+public class FieldService(PlayFieldService playFieldService, ILogger<FieldService> logger)
 {
     private readonly PlayFieldService PlayFieldService = playFieldService;
 
@@ -31,6 +31,7 @@ public class FieldService(PlayFieldService playFieldService)
 
     public async Task SetupPlayer(WebSocket socket, IProfileModel profileModel)
     {
+        logger.LogDebug("Setup player {} ready", _field.OwnedProfile.IdUsername);
         var buffer = new byte[1024 * 4];
         var receiveResult = await socket.ReceiveAsync(
             new ArraySegment<byte>(buffer), CancellationToken.None);
@@ -48,13 +49,17 @@ public class FieldService(PlayFieldService playFieldService)
             socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, null, CancellationToken.None);
             return;
         }
-        
+
+
         _field = new FieldModel(profileModel, ships.Value.Value); //Todo validate
+        
         FieldUpdated.Invoke(this, new FieldServiceEventArgs()
         {
             Instance = this,
             Type = FieldServiceEventType.FieldConfigured
         });
+        
+        logger.LogDebug("Field {} ready", _field.OwnedProfile.IdUsername);
 
         await Read(socket, profileModel);
     }
