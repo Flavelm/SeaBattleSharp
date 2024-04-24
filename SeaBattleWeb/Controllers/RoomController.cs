@@ -34,8 +34,8 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
         if (!roomsService.Has(id, out var room))
             return BadRequest(new { Error = "Room not found!" });
         else
-            if (room.IsReady || !room.CanConnect)
-                return BadRequest(new { Error = $"Room ready" });
+            if (room.IsReady || room.CanConnect)
+                return BadRequest(new { Error = $"Room ready {room.IsReady} {room.CanConnect}" });
         
         return Ok(new { Message = $"Welcome {(profileModel is NullProfileModel ? "anonymous" : "known")}, {profileModel.IdUsername}" });
     }
@@ -49,7 +49,7 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
         
         if (!roomsService.Has(id, out var room))
             return;
-        if (room.IsReady || !room.CanConnect)
+        if (room.IsReady || room.CanConnect)
             return;
         
         logger.LogInformation("Opening websocket");

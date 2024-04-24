@@ -21,39 +21,40 @@ public class FieldService(PlayFieldService playFieldService, ILogger<FieldServic
 
     public async Task Sync(IProfileModel profileModel)
     {
-        Socket.QuickSend(new { OpponentField = Field.GetField(profileModel) });
+        Socket.QuickSend(new PositionDto { OpponentField = Field.GetField(profileModel) });
     }
     
     public async Task Sync()
     {
-        Socket.QuickSend(new { YourField = Field.GetField(Field.OwnedProfile) });
+        Socket.QuickSend(new PositionDto { YourField = Field.GetField(Field.OwnedProfile) });
     }
 
     public async Task SetupPlayer(WebSocket socket, IProfileModel profileModel)
     {
-        logger.LogDebug("Setup player {} ready", _field.OwnedProfile.IdUsername);
         var buffer = new byte[1024 * 4];
         var receiveResult = await socket.ReceiveAsync(
             new ArraySegment<byte>(buffer), CancellationToken.None);
 
-        KeyValuePair<string, List<Ship>>? ships;
+        ShipsDto? ships;
         try
         {
             string json = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
-            ships = JsonConvert.DeserializeObject<KeyValuePair<string, List<Ship>>>(json);
+            ships = JsonConvert.DeserializeObject<ShipsDto>(json);
         }
         finally { }
         
-        if (!ships.HasValue || ships.Value.Key != "YourField")
+        logger.LogDebug("Received: {}", JsonConvert.SerializeObject(ships));
+        
+        if (ships == null || ships.YourField == null)
         {
             socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, null, CancellationToken.None);
             return;
         }
 
 
-        _field = new FieldModel(profileModel, ships.Value.Value); //Todo validate
+        _field = new FieldModel(profileModel, ships.YourField); //Todo validate
         
-        FieldUpdated.Invoke(this, new FieldServiceEventArgs()
+        FieldUpdated.Invoke(this, new FieldServiceEventArgs
         {
             Instance = this,
             Type = FieldServiceEventType.FieldConfigured
@@ -61,13 +62,13 @@ public class FieldService(PlayFieldService playFieldService, ILogger<FieldServic
         
         logger.LogDebug("Field {} ready", _field.OwnedProfile.IdUsername);
 
-        await Read(socket, profileModel);
+        _socket = socket;
+        
+        await Read();
     }
 
-    private async Task Read(WebSocket socket, IProfileModel profileModel)
+    private async Task Read()
     {
-        await SetupPlayer(socket, profileModel);
-        
         if (_socket == null)
             throw new ArgumentException("Socket didn't open!");
         
@@ -85,7 +86,7 @@ public class FieldService(PlayFieldService playFieldService, ILogger<FieldServic
             }
             finally { } //Todo command handle
             
-            FieldUpdated.Invoke(this, new FieldServiceEventArgs()
+            FieldUpdated.Invoke(this, new FieldServiceEventArgs
             {
                 Instance = this,
                 Type = FieldServiceEventType.ShipBroken
