@@ -45,7 +45,10 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
     {
         var webSockets = HttpContext.WebSockets;
         if (!webSockets.IsWebSocketRequest)
+        {
+            logger.LogDebug("Not a websocket");
             return;
+        }
         
         if (!roomsService.Has(id, out var room))
         {
