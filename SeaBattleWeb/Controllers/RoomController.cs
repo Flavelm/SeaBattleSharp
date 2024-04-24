@@ -48,9 +48,15 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
             return;
         
         if (!roomsService.Has(id, out var room))
+        {
+            logger.LogDebug("Room not found");
             return;
+        }
         if (room.IsReady || room.CanConnect)
+        {
+            logger.LogDebug($"Room ready {room.IsReady} {room.CanConnect}");
             return;
+        }
         
         logger.LogInformation("Opening websocket");
         
