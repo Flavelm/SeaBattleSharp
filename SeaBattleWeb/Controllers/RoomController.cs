@@ -49,7 +49,7 @@ public class RoomController(UsersContext usersContext, ProfileContext profiles, 
         
         if (!roomsService.Has(id, out var room))
             return;
-        else if (room.IsReady || !room.CanConnect)
+        if (room.IsReady || !room.CanConnect)
             return;
         
         logger.LogInformation("Opening websocket");

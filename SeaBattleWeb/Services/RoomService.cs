@@ -15,7 +15,7 @@ public class RoomService(ILogger<RoomService> logger, PlayFieldService playField
     public async Task ProcessSocket(IProfileModel profileModel, WebSocket webSocket)
     {
         ConnectedWebsocketCount++;
-        CanConnect = ConnectedWebsocketCount >= 2;
+        CanConnect = ConnectedWebsocketCount <= 1;
         await playFieldService.SetupField(webSocket, profileModel);
     }
 }
