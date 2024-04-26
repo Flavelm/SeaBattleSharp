@@ -11,26 +11,42 @@ public class FieldService(PlayFieldService playFieldService, ILogger<FieldServic
     private readonly PlayFieldService PlayFieldService = playFieldService;
 
     private WebSocket? _socket;
+    public CancellationTokenSource? _socketReadTaskCancellation;
     private FieldModel _field;
     
     public bool IsReady => _field != null;
     public WebSocket Socket => _socket;
     public FieldModel Field => _field;
     
+    public Guid Token { get; } = Guid.NewGuid();
+
+
     public event EventHandler<FieldServiceEventArgs> FieldUpdated;
 
     public async Task Sync(IProfileModel profileModel)
     {
-        Socket.QuickSend(new PositionDto { OpponentField = Field.GetField(profileModel) });
+        Socket.QuickSend(new PositionDto
+        {
+            OpponentField = Field.GetField(profileModel), 
+            YourField = Field.GetField(Field.OwnedProfile)
+        });
     }
     
-    public async Task Sync()
+    public async Task ReadNewSocket(WebSocket socket)
     {
-        Socket.QuickSend(new PositionDto { YourField = Field.GetField(Field.OwnedProfile) });
+        if (_socket is not null && !_socket.CloseStatus.HasValue)
+            await _socket.QuickCloseAsync(new { Error = "New session" });
+        
+        _socket = socket;
+        
+        await Read();
     }
 
     public async Task SetupPlayer(WebSocket socket, IProfileModel profileModel)
     {
+        if (_socket != null)
+            throw new Exception("Already setup");
+        
         var buffer = new byte[1024 * 4];
         var receiveResult = await socket.ReceiveAsync(
             new ArraySegment<byte>(buffer), CancellationToken.None);
@@ -63,7 +79,7 @@ public class FieldService(PlayFieldService playFieldService, ILogger<FieldServic
         logger.LogDebug("Field {} ready", _field.OwnedProfile.IdUsername);
 
         _socket = socket;
-        
+
         await Read();
     }
 
@@ -93,9 +109,10 @@ public class FieldService(PlayFieldService playFieldService, ILogger<FieldServic
             });
         }
 
-        await _socket.CloseAsync(
-            _socket.CloseStatus.Value,
-            _socket.CloseStatusDescription,
-            CancellationToken.None);
+        if (_socket.State != WebSocketState.CloseSent)
+            await _socket.CloseAsync(
+                _socket.CloseStatus.Value,
+                _socket.CloseStatusDescription,
+                CancellationToken.None);
     } 
 }

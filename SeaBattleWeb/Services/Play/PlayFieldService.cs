@@ -5,7 +5,7 @@ namespace SeaBattleWeb.Services.Play;
 
 public class PlayFieldService(IServiceProvider provider)
 {
-    private readonly List<FieldService> _fields = new();
+    private readonly List<FieldService> _fields = new(2);
     
     public DateTime LastActivity { get; private set; }
 
@@ -22,12 +22,12 @@ public class PlayFieldService(IServiceProvider provider)
         }
     }
 
-    public Task ProcessSocket(IProfileModel profile, WebSocket socket)
+    public async Task ProcessSocket(WebSocket socket, IProfileModel profileModel)
     {
-        return SetupField(socket, profile);
+        await SetupField(socket, profileModel);
     }
     
-    public async Task SetupField(WebSocket socket, IProfileModel profileModel)
+    private async Task SetupField(WebSocket socket, IProfileModel profileModel)
     {
         FieldService service = provider.GetRequiredService<FieldService>();
         service.FieldUpdated += SyncOnFieldUpdated;
@@ -35,7 +35,7 @@ public class PlayFieldService(IServiceProvider provider)
         {
             if (_fields.Count >= 1)
                 foreach (var fieldService in _fields)
-                    fieldService.Socket.QuickSend(new { OpponentJoined = true });
+                    fieldService.Socket.QuickSend(NotificationType.OpponentJoined);
             _fields.Add(service);
         }
 
@@ -50,10 +50,10 @@ public class PlayFieldService(IServiceProvider provider)
             lock (_fields)
             {
                 foreach (var fieldService in _fields.Where(o => o != e.Instance))
-                    fieldService.Socket.QuickSend(new { OpponentJoined = true });
+                    fieldService.Socket.QuickSend(NotificationType.OpponentReady);
                 if (IsReady)
                     foreach (var field in _fields)
-                        field.Socket.QuickSend(new { Ready = true });
+                        field.Socket.QuickSend(NotificationType.GameStart);
             }
         }
         else if (e.Type is FieldServiceEventType.ShipBroken)
@@ -63,7 +63,6 @@ public class PlayFieldService(IServiceProvider provider)
                 for (int i = 0; i < _fields.Count; i++)
                 {
                     _fields[i.Reverse()].Sync(_fields[i].Field.OwnedProfile);
-                    _fields[i].Sync();
                 }
             }
         }
