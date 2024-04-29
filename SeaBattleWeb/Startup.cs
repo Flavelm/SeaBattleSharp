@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SeaBattleWeb.Context;
-using SeaBattleWeb.Models.Play;
+using SeaBattleWeb.Contexts;
+using SeaBattleWeb.Hubs;
 using SeaBattleWeb.Services;
 using SeaBattleWeb.Services.Play;
 
@@ -17,11 +17,13 @@ public class Startup(IConfiguration configuration)
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllers();
+
+        services.AddSignalR();
         
-        services.AddDbContext<UsersContext>(
-            opt => opt.UseInMemoryDatabase("Users"));
         services.AddDbContext<ProfileContext>(
             opt => opt.UseInMemoryDatabase("Profiles"));
+        services.AddDbContext<CompetitionContext>(
+            opt => opt.UseInMemoryDatabase("Fields"));
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options => {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -46,6 +48,8 @@ public class Startup(IConfiguration configuration)
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
 
+        Console.WriteLine($"AllowedHosts: {Configuration["AllowedHosts"]}");
+        
         services.AddWebSockets(opt =>
         {
             opt.KeepAliveInterval = TimeSpan.FromMinutes(2);
@@ -54,8 +58,7 @@ public class Startup(IConfiguration configuration)
         
         services.AddSingleton<IRoomsService, RoomsService>();
         services.AddScoped<IRoomService, RoomService>();
-        services.AddScoped<PlayFieldService>();
-        services.AddTransient<FieldService>();
+        services.AddTransient<FieldServiceFactory>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -63,9 +66,6 @@ public class Startup(IConfiguration configuration)
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
-            
-            app.UseSwagger();
-            app.UseSwaggerUI();
         }
         else
         {
@@ -80,18 +80,16 @@ public class Startup(IConfiguration configuration)
             AllowedOrigins = { Configuration["AllowedHosts"] }
         });
         
-        //app.UseHttpsRedirection();
-        //app.UseStaticFiles();
-
         app.UseCors(opt => opt.AllowAnyOrigin());
         app.UseRouting();
 
         app.UseAuthentication();
         app.UseAuthorization();
-
+        
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapControllers();
+            endpoints.MapHub<RoomHub>("/play");
+            endpoints.MapHub<TokenHub>("/create");
         });
     }
 }

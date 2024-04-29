@@ -1,107 +1,52 @@
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.SignalR;
-using NuGet.Frameworks;
 
 namespace SeaBattleWeb.Services;
 
 public class RoomsService(IServiceProvider provider) : IRoomsService
 {
-    private const int InactiveTime = 3;
+    private const int InactiveTime = 3; //minutes
     private const double InactiveTimeCheck = InactiveTime + 0.1;
-
-    private readonly object _blocker = new();
     
-    private readonly Dictionary<Guid, IServiceScope> _scopes = new();
-    private readonly Dictionary<Guid, CancellationTokenSource> _cancellationTokens = new();
-    private readonly Dictionary<Guid, CancellationTokenRegistration> _cancellationTokensRegistrations = new();
+    private readonly ConcurrentDictionary<Guid, IServiceScope> _scopes = new();
+    private readonly ConcurrentDictionary<Guid, Timer> _timers = new();
 
+    public IRoomService this[Guid index] => _scopes[index].ServiceProvider.GetRequiredService<IRoomService>();
 
-    public IRoomService this[Guid index]
+    public bool Has(Guid id) => _scopes.ContainsKey(id);
+    
+    public bool Has(Guid id, [NotNullWhen(true)] out IRoomService? roomService)
     {
-        get
+        if (_scopes.TryGetValue(id, out var scope))
         {
-            lock (_scopes)
-            {
-                return _scopes[index].ServiceProvider.GetRequiredService<IRoomService>();
-            }
+            roomService = scope.ServiceProvider.GetRequiredService<IRoomService>();
+            return true;
         }
-    }
-
-    public bool Has(Guid id)
-    {
-        lock (_blocker)
-        {
-            return _scopes.ContainsKey(id);
-        }
-    }
-
-    public bool Has(Guid id, out IRoomService roomService)
-    {
-        lock (_blocker)
-        {
-            if (_scopes.TryGetValue(id, out var scope))
-            {
-                roomService = scope.ServiceProvider.GetRequiredService<IRoomService>();
-                return true;
-            }
-            else
-            {
-                roomService = null;
-                return false;
-            }
-        }
+        roomService = null;
+        return false;
     }
 
     public Guid Create()
     {
         Guid gen = Guid.NewGuid();
-        lock (_blocker)
-        {
-            _scopes.Add(gen, provider.CreateScope());
-        }
-        RenewCancellationTokenSource(gen, false);
+        _scopes.TryAdd(gen, provider.CreateScope());
+        Timer timer = new Timer(TryDispose, gen, TimeSpan.Zero, TimeSpan.FromMinutes(InactiveTimeCheck));
+        _timers.TryAdd(gen, timer);
         return gen;
     }
 
-    private void UpdateOrDispose(object? id)
+    private void TryDispose(object? id)
     {
-        if (id is not Guid guid)
+        if (id is not Guid gen) 
             return;
-        
-        if (this[guid].LastActivity - DateTime.Now > TimeSpan.FromMinutes(InactiveTime))
-        {
-            lock (_blocker)
-            {
-                _scopes[guid].Dispose();
-                _scopes.Remove(guid);
-                
-                _cancellationTokens.Remove(guid);
-                var reg = _cancellationTokensRegistrations[guid];
-                reg.Unregister();
-                reg.Dispose();
-                _cancellationTokensRegistrations.Remove(guid);
-            }
-        }
-        else
-            RenewCancellationTokenSource(guid);
-    }
 
-    private void RenewCancellationTokenSource(Guid uid, bool removeOld = true)
-    {
-        TimeSpan checkTime = TimeSpan.FromMinutes(InactiveTimeCheck);
-        var cancelToken = new CancellationTokenSource(checkTime);
-        var cancelRegister = cancelToken.Token.Register(UpdateOrDispose, uid);
-
-        lock (_blocker)
+        IRoomService room = this[gen];
+        if (DateTime.Now - room.LastActivity > TimeSpan.FromMinutes(InactiveTime))
         {
-            _cancellationTokens[uid] = cancelToken;
-            if (removeOld)
-            {
-                var oldReg = _cancellationTokensRegistrations[uid];
-                oldReg.Unregister();
-                oldReg.Dispose();
-            }
-            _cancellationTokensRegistrations[uid] = cancelRegister;
+            if (_timers.TryRemove(gen, out var timer))
+                timer.DisposeAsync();
+            if (_scopes.TryRemove(gen, out var scope))
+                scope.Dispose();
         }
     }
 }

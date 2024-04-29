@@ -12,5 +12,5 @@ public interface IRoomsService
 
     Guid Create();
     bool Has(Guid id);
-    bool Has(Guid id, out IRoomService roomService);
+    bool Has(Guid id, out IRoomService? roomService);
 }

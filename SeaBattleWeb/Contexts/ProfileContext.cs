@@ -5,32 +5,32 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SeaBattleWeb.Models;
-using SeaBattleWeb.Models.User;
 
-namespace SeaBattleWeb.Context;
+namespace SeaBattleWeb.Contexts;
 
-public class UsersContext(DbContextOptions<UsersContext> options, IConfiguration configuration) : DbContext(options)
+public class ProfileContext(DbContextOptions<ProfileContext> options, IConfiguration configuration) : DbContext(options)
 {
-    public DbSet<UserModel> Users { get; private set; } = null!;
-
-    public UserModel? FindByDto(UserLoginDto userDto)
+    public DbSet<ProfileModel> Profiles { get; private set; } = null!;
+    
+    public ProfileModel GenerateProfile(string? username)
     {
-        string lowerUsername = userDto.Username.ToLower();
-
-        return Users.Find(lowerUsername);
+        ProfileModel profileModel = new ProfileModel(this)
+        {
+            Id = Guid.NewGuid(),
+            IdUsername = username ?? Guid.NewGuid().ToString()
+        };
+        return profileModel;
     }
     
-    public string GenerateToken(UserModel user)
+    public string GenerateToken(ProfileModel profileModel)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, user.IdUsername),
-            new Claim(ClaimTypes.Email, user.EmailAddress),
-            new Claim(ClaimTypes.GivenName, user.GivenName),
-            new Claim(ClaimTypes.Role, user.Role),
+            new Claim(ClaimTypes.NameIdentifier, profileModel.Id.ToString()),
+            new Claim(ClaimTypes.GivenName, profileModel.IdUsername),
         };
 
         var token = new JwtSecurityToken(configuration["Jwt:Issuer"],
@@ -42,32 +42,30 @@ public class UsersContext(DbContextOptions<UsersContext> options, IConfiguration
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
     
-    public UserModel? GetCurrentUser(IIdentity? identity)
+    public ProfileModel? GetCurrentUser(IIdentity? identity)
     {
         if (identity as ClaimsIdentity is { IsAuthenticated: true, Claims: not null } claimsIdentity)
         {
-            var user = new UserModel();
-            
+            dynamic dyn = new { };
+
             foreach (var o in claimsIdentity.Claims)
             {
                 switch (o)
                 {
                     case { Type: ClaimTypes.NameIdentifier } claim:
-                        user.IdUsername = claim.Value;
-                        break;
-                    case { Type: ClaimTypes.Email } claim:
-                        user.EmailAddress = claim.Value;
+                        dyn.Id = Guid.Parse(claim.Value);
                         break;
                     case { Type: ClaimTypes.GivenName } claim:
-                        user.GivenName = claim.Value;
-                        break;
-                    case { Type: ClaimTypes.Role } claim:
-                        user.Role = claim.Value;
+                        dyn.IdUsername = claim.Value;
                         break;
                 }
             }
 
-            return user;
+            return new ProfileModel(this)
+            {
+                Id = dyn.Id,
+                IdUsername = dyn.IdUsername
+            };
         }
         return null;
     }

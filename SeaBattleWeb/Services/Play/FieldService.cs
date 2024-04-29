@@ -1,118 +1,35 @@
-using System.Net.WebSockets;
-using System.Text;
-using Newtonsoft.Json;
-using SeaBattleWeb.Models;
-using SeaBattleWeb.Models.Play;
+using SeaBattleWeb.Contexts;
+using SeaBattleWeb.Models.Play.Models.Play;
 
 namespace SeaBattleWeb.Services.Play;
 
-public class FieldService(PlayFieldService playFieldService, ILogger<FieldService> logger)
+public class FieldService : IDisposable
 {
-    private readonly PlayFieldService PlayFieldService = playFieldService;
+    private readonly ILogger<FieldService> _logger;
+    private readonly RoomService _roomService;
+    private readonly ProfileContext _profileContext;
+    private readonly FieldModel _field;
 
-    private WebSocket? _socket;
-    public CancellationTokenSource? _socketReadTaskCancellation;
-    private FieldModel _field;
+    public bool IsEnded => _field.GetField(_field.OwnedProfile).Count == 100; //TODO Just placeholder
     
-    public bool IsReady => _field != null;
-    public WebSocket Socket => _socket;
+    public FieldService(
+        ILogger<FieldService> logger,
+        ProfileContext profileContext, 
+        RoomService roomService,
+        FieldModel fieldModel)
+    {
+        _logger = logger;
+        _profileContext = profileContext;
+        _roomService = roomService;
+        _field = fieldModel;
+    }
+    
     public FieldModel Field => _field;
-    
-    public Guid Token { get; } = Guid.NewGuid();
 
+    public event EventHandler<FieldServiceEventArgs>? FieldUpdated;
 
-    public event EventHandler<FieldServiceEventArgs> FieldUpdated;
-
-    public async Task Sync(IProfileModel profileModel)
+    public void Dispose()
     {
-        Socket.QuickSend(new PositionDto
-        {
-            OpponentField = Field.GetField(profileModel), 
-            YourField = Field.GetField(Field.OwnedProfile)
-        });
+        _profileContext.Profiles.Remove(_field.OwnedProfile);
     }
-    
-    public async Task ReadNewSocket(WebSocket socket)
-    {
-        if (_socket is not null && !_socket.CloseStatus.HasValue)
-            await _socket.QuickCloseAsync(new { Error = "New session" });
-        
-        _socket = socket;
-        
-        await Read();
-    }
-
-    public async Task SetupPlayer(WebSocket socket, IProfileModel profileModel)
-    {
-        if (_socket != null)
-            throw new Exception("Already setup");
-        
-        var buffer = new byte[1024 * 4];
-        var receiveResult = await socket.ReceiveAsync(
-            new ArraySegment<byte>(buffer), CancellationToken.None);
-
-        ShipsDto? ships;
-        try
-        {
-            string json = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
-            ships = JsonConvert.DeserializeObject<ShipsDto>(json);
-        }
-        finally { }
-        
-        logger.LogDebug("Received: {}", JsonConvert.SerializeObject(ships));
-        
-        if (ships == null || ships.YourField == null)
-        {
-            socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, null, CancellationToken.None);
-            return;
-        }
-
-
-        _field = new FieldModel(profileModel, ships.YourField); //Todo validate
-        
-        FieldUpdated.Invoke(this, new FieldServiceEventArgs
-        {
-            Instance = this,
-            Type = FieldServiceEventType.FieldConfigured
-        });
-        
-        logger.LogDebug("Field {} ready", _field.OwnedProfile.IdUsername);
-
-        _socket = socket;
-
-        await Read();
-    }
-
-    private async Task Read()
-    {
-        if (_socket == null)
-            throw new ArgumentException("Socket didn't open!");
-        
-        while (!_socket.CloseStatus.HasValue)
-        {
-            var buffer = new byte[1024 * 4];
-            var receiveResult = await _socket.ReceiveAsync(
-                new ArraySegment<byte>(buffer), CancellationToken.None);
-            
-            dynamic? ships = null;
-            try
-            {
-                string json = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
-                ships = JsonConvert.DeserializeObject<dynamic>(json);
-            }
-            finally { } //Todo command handle
-            
-            FieldUpdated.Invoke(this, new FieldServiceEventArgs
-            {
-                Instance = this,
-                Type = FieldServiceEventType.ShipBroken
-            });
-        }
-
-        if (_socket.State != WebSocketState.CloseSent)
-            await _socket.CloseAsync(
-                _socket.CloseStatus.Value,
-                _socket.CloseStatusDescription,
-                CancellationToken.None);
-    } 
 }
