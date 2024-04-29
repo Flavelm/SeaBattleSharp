@@ -88,6 +88,7 @@ public class Startup(IConfiguration configuration)
         {
             endpoints.MapHub<RoomHub>("/play");
             endpoints.MapHub<TokenHub>("/create");
+            endpoints.MapControllers();
         });
     }
 }
