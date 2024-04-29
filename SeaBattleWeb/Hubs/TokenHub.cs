@@ -5,7 +5,7 @@ using SeaBattleWeb.Contexts;
 namespace SeaBattleWeb.Hubs;
 
 [AllowAnonymous]
-public class TokenHub(ProfileContext profiles) : Hub
+public class TokenHub(ApplicationDbContext profiles) : Hub
 {
     public Task GenerateToken(string? name)
     {

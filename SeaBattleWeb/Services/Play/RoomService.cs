@@ -6,7 +6,7 @@ namespace SeaBattleWeb.Services.Play;
 
 public class RoomService : IRoomService, IDisposable
 {
-    private readonly CompetitionContext _competitionContext;
+    private readonly ApplicationDbContext _competitionContext;
     private readonly FieldServiceFactory _fieldServiceFactory;
 
     private readonly RoomModel _competitionModel;
@@ -26,7 +26,7 @@ public class RoomService : IRoomService, IDisposable
         }
     }
 
-    public RoomService(CompetitionContext competitionContext, FieldServiceFactory fieldServiceFactory)
+    public RoomService(ApplicationDbContext competitionContext, FieldServiceFactory fieldServiceFactory)
     {
         _competitionContext = competitionContext;
         _fieldServiceFactory = fieldServiceFactory;

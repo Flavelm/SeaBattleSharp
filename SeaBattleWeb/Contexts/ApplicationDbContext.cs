@@ -5,11 +5,14 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SeaBattleWeb.Models;
+using SeaBattleWeb.Models.Play.Models.Play;
 
 namespace SeaBattleWeb.Contexts;
 
-public class ProfileContext(DbContextOptions<ProfileContext> options, IConfiguration configuration) : DbContext(options)
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration) : DbContext(options)
 {
+    public DbSet<RoomModel> Competitions { get; private set; } = null!;
+    
     public DbSet<ProfileModel> Profiles { get; private set; } = null!;
     
     public ProfileModel GenerateProfile(string? username)

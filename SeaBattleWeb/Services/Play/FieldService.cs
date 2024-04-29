@@ -7,14 +7,14 @@ public class FieldService : IDisposable
 {
     private readonly ILogger<FieldService> _logger;
     private readonly RoomService _roomService;
-    private readonly ProfileContext _profileContext;
+    private readonly ApplicationDbContext _profileContext;
     private readonly FieldModel _field;
 
     public bool IsEnded => _field.GetField(_field.OwnedProfile).Count == 100; //TODO Just placeholder
     
     public FieldService(
         ILogger<FieldService> logger,
-        ProfileContext profileContext, 
+        ApplicationDbContext profileContext, 
         RoomService roomService,
         FieldModel fieldModel)
     {

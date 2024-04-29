@@ -11,7 +11,7 @@ using SeaBattleWeb.Services.Play;
 namespace SeaBattleWeb.Hubs;
 
 [Authorize]
-public class RoomHub(ILogger<RoomHub> logger, ProfileContext profiles, RoomsService roomsService) : Hub<IClientRoomHub>
+public class RoomHub(ILogger<RoomHub> logger, ApplicationDbContext profiles, RoomsService roomsService) : Hub<IClientRoomHub>
 {
     //Id, List<connectionId>
     private static readonly ConcurrentDictionary<Guid, List<string>> UserConnections = new();

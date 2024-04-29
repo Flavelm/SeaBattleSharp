@@ -19,11 +19,15 @@ public class Startup(IConfiguration configuration)
         services.AddControllers();
 
         services.AddSignalR();
-        
-        services.AddDbContext<ProfileContext>(
-            opt => opt.UseInMemoryDatabase("Profiles"));
-        services.AddDbContext<CompetitionContext>(
-            opt => opt.UseInMemoryDatabase("Fields"));
+
+        string? sqlServer = Environment.GetEnvironmentVariable("MYSQL_CONNECTION_STRING");
+        services.AddDbContext<ApplicationDbContext>(opt =>
+        {
+            if (sqlServer != null)
+                opt.UseMySql(sqlServer, ServerVersion.AutoDetect(sqlServer));
+            else
+                opt.UseInMemoryDatabase("Saves");
+        });
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options => {
                 options.TokenValidationParameters = new TokenValidationParameters

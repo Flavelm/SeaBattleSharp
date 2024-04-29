@@ -8,7 +8,7 @@ public class FieldServiceFactory(IServiceProvider provider)
     public FieldService Create(FieldModel fieldModel)
     {
         ILogger<FieldService> logger = provider.GetRequiredService<ILogger<FieldService>>();
-        ProfileContext profileContext = provider.GetRequiredService<ProfileContext>();
+        ApplicationDbContext profileContext = provider.GetRequiredService<ApplicationDbContext>();
         RoomService roomService = provider.GetRequiredService<RoomService>();
 
         return new FieldService(logger, profileContext, roomService, fieldModel);

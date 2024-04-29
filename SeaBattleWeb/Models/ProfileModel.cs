@@ -5,7 +5,7 @@ using SeaBattleWeb.Contexts;
 namespace SeaBattleWeb.Models;
 
 [Table("Profiles")]
-public class ProfileModel(ProfileContext profileContext)
+public class ProfileModel(ApplicationDbContext profileContext)
 {
     [Required] [Key] public string IdUsername { get; init; }
     [Required] public Guid Id { get; init; }
