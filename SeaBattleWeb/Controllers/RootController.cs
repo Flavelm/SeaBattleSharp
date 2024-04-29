@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace SeaBattleWeb.Controllers;
 
 [ApiController]
-[Route("/")]
+[Route("/api")]
 [AllowAnonymous]
 public class RootController : ControllerBase
 {

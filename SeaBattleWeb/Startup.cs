@@ -86,8 +86,8 @@ public class Startup(IConfiguration configuration)
         
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapHub<RoomHub>("/play");
-            endpoints.MapHub<TokenHub>("/create");
+            endpoints.MapHub<RoomHub>("/api/play");
+            endpoints.MapHub<TokenHub>("/api/create");
             endpoints.MapControllers();
         });
     }
