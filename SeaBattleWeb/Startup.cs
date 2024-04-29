@@ -47,8 +47,6 @@ public class Startup(IConfiguration configuration)
 
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
-
-        Console.WriteLine($"AllowedHosts: {Configuration["AllowedHosts"]}");
         
         services.AddWebSockets(opt =>
         {

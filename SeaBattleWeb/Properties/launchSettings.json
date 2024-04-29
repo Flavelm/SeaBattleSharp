@@ -20,6 +20,14 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "httpsProduction": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://0.0.0.0:7070",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      }
     }
   }
 }
