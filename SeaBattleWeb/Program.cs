@@ -5,6 +5,12 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        if (builder.Environment.IsProduction())
+        {
+            string configPath = $"{builder.Environment.ContentRootPath}/appsettings.json";
+            Console.WriteLine($"Add configuration {configPath}");
+            builder.Configuration.AddJsonFile($"{configPath}");
+        }
         var startup = new Startup(builder.Configuration);
         startup.ConfigureServices(builder.Services);
         var app = builder.Build();
