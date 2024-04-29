@@ -9,6 +9,8 @@ public class Program
         {
             builder.Environment.ContentRootPath = AppDomain.CurrentDomain.BaseDirectory;
             Console.WriteLine($"Set environment ContentRootPath (to {builder.Environment.ContentRootPath}) for production");
+            builder.Configuration.AddJsonFile(builder.Environment.ContentRootPath + "application.json");
+            Console.WriteLine($"Set configuration (to {builder.Environment.ContentRootPath + "application.json"}) for production");
         }
         var startup = new Startup(builder.Configuration);
         startup.ConfigureServices(builder.Services);
