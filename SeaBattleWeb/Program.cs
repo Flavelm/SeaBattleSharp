@@ -7,9 +7,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         if (builder.Environment.IsProduction())
         {
-            string configPath = $"{AppDomain.CurrentDomain.BaseDirectory}/appsettings.json";
-            Console.WriteLine($"Add configuration {configPath}");
-            builder.Configuration.AddJsonFile(configPath);
+            builder.Environment.ContentRootPath = AppDomain.CurrentDomain.BaseDirectory;
+            Console.WriteLine($"Set environment ContentRootPath (to {builder.Environment.ContentRootPath}) for production");
         }
         var startup = new Startup(builder.Configuration);
         startup.ConfigureServices(builder.Services);
