@@ -2,9 +2,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SeaBattleWeb.Models.Play.Models.Play;
 
-[Keyless]
 public class PositionModel
 {
+    private int Id { get; init; }
+    
     public PositionModel(int x, int y)
     {
         X = x;
