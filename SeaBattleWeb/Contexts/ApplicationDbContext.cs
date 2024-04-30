@@ -72,4 +72,21 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         }
         return null;
     }
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PositionModel>(
+            b =>
+            {
+                b.Property(e => e.X);
+                b.Property(e => e.Y);
+            });
+
+        modelBuilder.Entity<ShipModel>(
+            b =>
+            {
+                b.Property(e => e.X);
+                b.Property(e => e.Y);
+            });
+    }
 }

@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace SeaBattleWeb.Models.Play.Models.Play;
 
+[Keyless]
 public class PositionModel
 {
     public PositionModel(int x, int y)
