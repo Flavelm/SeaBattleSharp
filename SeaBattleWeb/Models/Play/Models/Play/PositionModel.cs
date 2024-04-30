@@ -4,7 +4,7 @@ namespace SeaBattleWeb.Models.Play.Models.Play;
 
 public class PositionModel
 {
-    [Key] private int Id { get; init; }
+    [Key] public int Id { get; init; }
     
     public PositionModel(int x, int y)
     {
