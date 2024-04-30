@@ -83,9 +83,11 @@ public class RoomHub(ILogger<RoomHub> logger, ApplicationDbContext profiles, Roo
             return;
         }
             
-        _roomService.Join(new FieldModel(_profile, fieldDto.Ships)
+        _roomService.Join(new FieldModel
         {
             FieldId = Guid.NewGuid(),
+            OwnedProfile = _profile,
+            Ships = fieldDto.Ships.AsReadOnly(),
             OpenedPositions = new List<PositionModel>(),
         });
         
