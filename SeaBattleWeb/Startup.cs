@@ -91,7 +91,10 @@ public class Startup(IConfiguration configuration)
         app.UseCors(opt =>
         {
             opt.AllowCredentials();
-            opt.WithOrigins(Environment.GetEnvironmentVariable("ORIGINS").Split(";"));
+            if (env.IsDevelopment())
+                opt.AllowAnyOrigin();
+            else if (env.IsProduction())
+                opt.WithOrigins(Environment.GetEnvironmentVariable("ORIGINS").Split(";"));
             opt.AllowAnyHeader();
             opt.WithMethods("GET", "POST");
         });
