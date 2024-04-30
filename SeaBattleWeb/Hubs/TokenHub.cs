@@ -16,7 +16,8 @@ public class TokenHub(ApplicationDbContext profiles) : Hub
         
         var token = profiles.GenerateToken(profile);
         caller.SendAsync("setToken", token);
-
+        
+        profiles.SaveChanges();
         return Task.CompletedTask;
     }
 }

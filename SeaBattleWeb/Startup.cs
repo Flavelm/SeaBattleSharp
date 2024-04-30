@@ -29,7 +29,6 @@ public class Startup(IConfiguration configuration)
                     builder.AllowAnyOrigin();
                 else
                     builder.WithOrigins(origins.Split(";"));
-
                 builder.AllowAnyHeader();
                 builder.AllowAnyMethod();
             });
@@ -39,15 +38,9 @@ public class Startup(IConfiguration configuration)
         services.AddDbContext<ApplicationDbContext>(opt =>
         {
             if (sqlServer != null)
-            {
-                Console.WriteLine("Starting using MySql database");
                 opt.UseMySql(sqlServer, ServerVersion.AutoDetect(sqlServer));
-            }
             else
-            {
-                Console.WriteLine("Starting using InMemory database");
                 opt.UseInMemoryDatabase("Saves");
-            }
         });
         
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
