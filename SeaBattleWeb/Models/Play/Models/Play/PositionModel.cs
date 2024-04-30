@@ -1,7 +1,16 @@
 namespace SeaBattleWeb.Models.Play.Models.Play;
 
-public class PositionModel(int x, int y)
+public class PositionModel
 {
-    public int X { get; } = x;
-    public int Y { get; } = y;
+    public PositionModel(int x, int y)
+    {
+        X = x;
+        Y = y;
+    }
+    
+    public PositionModel()
+    {}
+    
+    public int X { get; init; }
+    public int Y { get; init; }
 }
