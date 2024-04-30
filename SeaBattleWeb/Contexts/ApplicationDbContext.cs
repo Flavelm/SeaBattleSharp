@@ -1,3 +1,4 @@
+using System.Data.Entity;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
@@ -6,14 +7,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SeaBattleWeb.Models;
 using SeaBattleWeb.Models.Play.Models.Play;
+using DbContext = Microsoft.EntityFrameworkCore.DbContext;
 
 namespace SeaBattleWeb.Contexts;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration) : DbContext(options)
+public sealed class ApplicationDbContext : DbContext
 {
-    public DbSet<RoomModel> Competitions { get; private set; } = null!;
+    private readonly IConfiguration _configuration;
+
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration) : base(options)
+    {
+        Database.EnsureCreated();
+        _configuration = configuration;
+    }
+
+    public Microsoft.EntityFrameworkCore.DbSet<RoomModel> Competitions { get; private set; } = null!;
     
-    public DbSet<ProfileModel> Profiles { get; private set; } = null!;
+    public Microsoft.EntityFrameworkCore.DbSet<ProfileModel> Profiles { get; private set; } = null!;
     
     public ProfileModel GenerateProfile(string? username)
     {
@@ -27,7 +37,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     
     public string GenerateToken(ProfileModel profileModel)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -36,8 +46,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             new Claim(ClaimTypes.GivenName, profileModel.IdUsername),
         };
 
-        var token = new JwtSecurityToken(configuration["Jwt:Issuer"],
-            configuration["Jwt:Audience"],
+        var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
+            _configuration["Jwt:Audience"],
             claims,
             expires: DateTime.Now.AddMinutes(15),
             signingCredentials: credentials);
