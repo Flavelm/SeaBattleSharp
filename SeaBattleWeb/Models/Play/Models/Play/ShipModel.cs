@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace SeaBattleWeb.Models.Play.Models.Play;
 
 public class ShipModel(int x, int y) : PositionModel(x, y)
 {
-    private int Id { get; init; }
+    [Key] private int Id { get; init; }
     
     public event EventHandler Updated; 
     public bool IsBroken { get; set; }

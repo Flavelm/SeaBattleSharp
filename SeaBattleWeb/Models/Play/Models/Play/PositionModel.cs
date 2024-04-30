@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace SeaBattleWeb.Models.Play.Models.Play;
 
 public class PositionModel
 {
-    private int Id { get; init; }
+    [Key] private int Id { get; init; }
     
     public PositionModel(int x, int y)
     {
