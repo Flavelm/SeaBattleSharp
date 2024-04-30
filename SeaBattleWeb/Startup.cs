@@ -88,7 +88,14 @@ public class Startup(IConfiguration configuration)
             AllowedOrigins = { Configuration["AllowedHosts"] }
         });
         
-        app.UseCors(opt => opt.AllowAnyOrigin());
+        app.UseCors(opt =>
+        {
+            opt.AllowCredentials();
+            opt.WithOrigins(Environment.GetEnvironmentVariable("ORIGINS").Split(";"));
+            opt.AllowAnyHeader();
+            opt.WithMethods("GET", "POST");
+        });
+        
         app.UseRouting();
 
         app.UseAuthentication();
