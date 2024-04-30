@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,14 +13,28 @@ namespace SeaBattleWeb;
 
 public class Startup(IConfiguration configuration)
 {
+    private const string CorsPolicy = "CorsPolicy";
     public IConfiguration Configuration { get; } = configuration;
 
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllers();
 
-        services.AddSignalR();
+        services.AddCors(opt =>
+        {
+            opt.AddPolicy(CorsPolicy, builder =>
+            {
+                string? origins = Environment.GetEnvironmentVariable("ORIGINS");
+                if (origins == null)
+                    builder.AllowAnyOrigin();
+                else
+                    builder.WithOrigins(origins.Split(";"));
 
+                builder.AllowAnyHeader();
+                builder.AllowAnyMethod();
+            });
+        });
+        
         string? sqlServer = Environment.GetEnvironmentVariable("MYSQL_CONNECTION_STRING");
         services.AddDbContext<ApplicationDbContext>(opt =>
         {
@@ -34,6 +49,7 @@ public class Startup(IConfiguration configuration)
                 opt.UseInMemoryDatabase("Saves");
             }
         });
+        
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options => {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -47,9 +63,8 @@ public class Startup(IConfiguration configuration)
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
                 };
             });
+        
         services.AddAuthorization();
-        services.AddCors();
-
         services.AddAuthorizationBuilder()
             .AddPolicy("user_play", policy =>
                 policy.RequireRole("user")
@@ -63,6 +78,8 @@ public class Startup(IConfiguration configuration)
             opt.KeepAliveInterval = TimeSpan.FromMinutes(2);
             opt.AllowedOrigins.Add(Configuration["AllowedHosts"]);
         });
+        
+        services.AddSignalR();
         
         services.AddSingleton<IRoomsService, RoomsService>();
         services.AddScoped<IRoomService, RoomService>();
@@ -82,27 +99,17 @@ public class Startup(IConfiguration configuration)
             app.UseHsts();
         }
 
+        app.UseCors(CorsPolicy);
+        app.UseRouting();
+        
+        app.UseAuthentication();
+        app.UseAuthorization();
+        
         app.UseWebSockets(new WebSocketOptions
         {
             KeepAliveInterval = TimeSpan.FromMinutes(2),
             AllowedOrigins = { Configuration["AllowedHosts"] }
         });
-        
-        app.UseCors(opt =>
-        {
-            opt.AllowCredentials();
-            if (env.IsDevelopment())
-                opt.AllowAnyOrigin();
-            else if (env.IsProduction())
-                opt.WithOrigins(Environment.GetEnvironmentVariable("ORIGINS").Split(";"));
-            opt.AllowAnyHeader();
-            opt.WithMethods("GET", "POST");
-        });
-        
-        app.UseRouting();
-
-        app.UseAuthentication();
-        app.UseAuthorization();
         
         app.UseEndpoints(endpoints =>
         {

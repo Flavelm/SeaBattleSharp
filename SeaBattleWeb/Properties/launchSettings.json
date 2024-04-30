@@ -26,7 +26,8 @@
       "dotnetRunMessages": true,
       "applicationUrl": "https://0.0.0.0:7070;http://0.0.0.0:5083",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Production"
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "ORIGINS": "http://localhost:5173/"
       }
     }
   }
