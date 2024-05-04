@@ -1,5 +1,8 @@
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using Microsoft.CodeAnalysis.Elfie.Extensions;
 using SeaBattleWeb.Contexts;
+using SeaBattleWeb.Models;
 using SeaBattleWeb.Models.Play.Models.Play;
 
 namespace SeaBattleWeb.Services.Play;
@@ -11,6 +14,8 @@ public class RoomService : IRoomService, IDisposable
 
     private readonly RoomModel _competitionModel;
     private readonly ConcurrentBag<FieldService> _fieldServices;
+
+    private int CurrentShot;
 
     public event EventHandler<FieldServiceEventArgs>? FieldUpdated;
     
@@ -25,6 +30,10 @@ public class RoomService : IRoomService, IDisposable
             return _fieldServices.All(e => !e.IsEnded) ? RoomState.GameStarted : RoomState.GameEnded;
         }
     }
+
+    public Guid RoomId => _competitionModel.RoomId;
+
+    public ReadOnlyCollection<FieldService> FieldServices => new(new List<FieldService>(_fieldServices));
 
     public RoomService(ApplicationDbContext competitionContext, FieldServiceFactory fieldServiceFactory)
     {
@@ -41,11 +50,46 @@ public class RoomService : IRoomService, IDisposable
 
     private void Notify(object? sender, FieldServiceEventArgs eventArgs)
     {
+        CurrentShot = CurrentShot.Reverse();
         FieldUpdated?.Invoke(this, eventArgs);
+        LastActivity = DateTime.Now;
+    }
+
+    public FieldService GetByOwner(ProfileModel profileModel)
+    {
+        return _fieldServices.First(f => f.Field.OwnedProfile.Equals(profileModel));
+    }
+    
+    public FieldService GetByOther(ProfileModel profileModel)
+    {
+        return _fieldServices.First(f => !f.Field.OwnedProfile.Equals(profileModel));
+    }
+
+    public bool CanShot(ProfileModel profileModel)
+    {
+        if (_fieldServices.Count != 2)
+            return false;
+
+        int i = 0;
+        foreach (var service in _fieldServices)
+        {
+            if (service.Field.OwnedProfile.Equals(profileModel))
+            {
+                return CurrentShot == i;
+            }
+            i++;
+        }
+        
+        LastActivity = DateTime.Now;
+                
+        return false;
     }
 
     public void Join(FieldModel fieldModel)
     {
+        if (_fieldServices.Count >= 2 || RoomState == RoomState.GameStarted)
+            throw new Exception("Game already started");
+        
         lock (_competitionModel)
         {
             _competitionModel.Fields.Add(fieldModel);

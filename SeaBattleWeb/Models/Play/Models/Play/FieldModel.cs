@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -17,22 +18,27 @@ public class FieldModel
     [Key] public Guid FieldId { get; init; }
     public required ProfileModel OwnedProfile { get; init; }
     public required ReadOnlyCollection<ShipModel> Ships { get; init; }
-    public required List<PositionModel> OpenedPositions { get; init; }
+    public required ConcurrentBag<PositionModel> OpenedPositions { get; init; }
 
-    //Position, IsShip
-    public List<PositionModel> GetField(ProfileModel profileModel)
+    public List<PositionModel> FieldForOwner
     {
-        var toReturn = new List<PositionModel>();
-        if (OpenedPositions.Equals(profileModel))
+        get
         {
+            var toReturn = new List<PositionModel>();
             toReturn.AddRange(Ships);
+            toReturn.AddRange(OpenedPositions);
+            return toReturn;
         }
-        else
+    }
+
+    public List<PositionModel> FieldForOther
+    {
+        get
         {
+            var toReturn = new List<PositionModel>();
             toReturn.AddRange(Ships.Where(ship => ship.IsBroken));
+            toReturn.AddRange(OpenedPositions);
+            return toReturn;
         }
-        
-        toReturn.AddRange(OpenedPositions);
-        return toReturn;
     }
 }

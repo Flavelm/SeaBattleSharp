@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.ComponentModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using SeaBattleWeb.Contexts;
@@ -15,9 +14,11 @@ public class RoomHub(ILogger<RoomHub> logger, ApplicationDbContext profiles, Roo
 {
     //Id, List<connectionId>
     private static readonly ConcurrentDictionary<Guid, List<string>> UserConnections = new();
-    
+
     private IRoomService? _roomService;
     private ProfileModel? _profile;
+
+    private string GroupName => _roomService.RoomId.ToLowerString();
 
     public override async Task OnConnectedAsync()
     {
@@ -88,8 +89,10 @@ public class RoomHub(ILogger<RoomHub> logger, ApplicationDbContext profiles, Roo
             FieldId = Guid.NewGuid(),
             OwnedProfile = _profile,
             Ships = fieldDto.Ships.AsReadOnly(),
-            OpenedPositions = new List<PositionModel>(),
+            OpenedPositions = new ConcurrentBag<PositionModel>(),
         });
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomGuid.ToLowerString());
         
         _roomService.FieldUpdated += RoomOnFieldUpdated;
     }
@@ -98,19 +101,39 @@ public class RoomHub(ILogger<RoomHub> logger, ApplicationDbContext profiles, Roo
     {
         if (_profile == null || _roomService == null)
             return;
+
+        var can = _roomService.CanShot(_profile);
+        
+        if (!can)
+            return;
+        
+        var otherField = _roomService.GetByOther(_profile);
+        otherField.Shot(x, y);
     }
 
     public async Task Notify()
     {
         if (_profile == null || _roomService == null)
             return;
+
+        var callerField = _roomService.GetByOwner(_profile);
+        var otherField = _roomService.GetByOther(_profile);
         
-        //TODO Notify
+        Clients.OthersInGroup(GroupName).Positions(new PositionDto()
+        {
+            YourField = otherField.Field.FieldForOwner,
+            OpponentField = callerField.Field.FieldForOther
+        });
+        Clients.Caller.Positions(new PositionDto()
+        {
+            YourField = callerField.Field.FieldForOwner,
+            OpponentField = otherField.Field.FieldForOther
+        });
     }
 
     private void RoomOnFieldUpdated(object? sender, FieldServiceEventArgs e)
     {
-        Notify();
+        _ = Notify();
     }
 
     protected override void Dispose(bool disposing)
