@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SeaBattleWeb.Models.Play.Models.Play;
 
 public class PositionModel
 {
-    [Key] public int Id { get; init; }
+    [ForeignKey("Id")]  public int Id { get; init; }
     
     public PositionModel(int x, int y)
     {
