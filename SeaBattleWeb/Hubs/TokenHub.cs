@@ -11,6 +11,9 @@ public class TokenHub(ApplicationDbContext profiles) : Hub
     {
         var caller = Clients.Caller;
 
+        if (profiles.Profiles.Find(name) != null)
+            throw new Exception("Profile already registered");
+        
         var profile = profiles.GenerateProfile(name);
         profiles.Profiles.Add(profile);
         

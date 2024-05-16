@@ -122,12 +122,14 @@ public class RoomHub(ILogger<RoomHub> logger, ApplicationDbContext profiles, Roo
         Clients.OthersInGroup(GroupName).Positions(new PositionDto()
         {
             YourField = otherField.Field.FieldForOwner,
-            OpponentField = callerField.Field.FieldForOther
+            OpponentField = callerField.Field.FieldForOther,
+            NextShotBy = _roomService.CanShot(_profile)
         });
         Clients.Caller.Positions(new PositionDto()
         {
             YourField = callerField.Field.FieldForOwner,
-            OpponentField = otherField.Field.FieldForOther
+            OpponentField = otherField.Field.FieldForOther,
+            NextShotBy = _roomService.CanShot(_profile)
         });
     }
 

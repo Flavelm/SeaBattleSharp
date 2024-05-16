@@ -8,4 +8,5 @@ public class PositionDto : Serializable
 {
     public List<PositionModel>? YourField { get; set; }
     public List<PositionModel>? OpponentField { get; set; }
+    public bool? NextShotBy { get; set; }
 }
