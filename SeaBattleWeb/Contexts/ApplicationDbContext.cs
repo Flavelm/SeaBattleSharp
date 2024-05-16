@@ -88,6 +88,7 @@ public sealed class ApplicationDbContext : DbContext
         modelBuilder.Entity<PositionModel>(
             b =>
             {
+                b.HasKey(e => e.Id);
                 b.Property(e => e.X);
                 b.Property(e => e.Y);
             });
@@ -95,6 +96,7 @@ public sealed class ApplicationDbContext : DbContext
         modelBuilder.Entity<ShipModel>(
             b =>
             {
+                b.HasKey(e => e.Id);
                 b.Property(e => e.X);
                 b.Property(e => e.Y);
             });
