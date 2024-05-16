@@ -11,12 +11,10 @@
 
 #### Ship placement (Auth needed, /play)
 
-* Client: SeaBattleWeb.Models.ShipsDto
-* Server: SeaBattleWeb.Models.NotificationDto
-* Server: SeaBattleWeb.Models.NotificationDto
+* Client on server: Join(string roomId, FieldDto fieldDto) or Create(FieldDto fieldDto)
+* Server on client: SetStatus(OpponentJoin or OpponentReady or GameStarted)
 
 #### Have fun! (Auth needed, /play)
 
-* Client: SeaBattleWeb.Models.ShipsDto
-* Server: SeaBattleWeb.Models.ShipsDto
-* Server: SeaBattleWeb.Models.PositionDto
+* Client on server: Shot(int x, int y) or Notify()
+* Server on client: Positions(PositionDto)
